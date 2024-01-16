@@ -2,15 +2,17 @@ package main
 
 import (
 	"archive/tar"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
+	archive "github.com/containerd/containerd/archive"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
-	. "github.com/mudler/luet/pkg/api/core/context"
-	. "github.com/mudler/luet/pkg/api/core/image"
 	"github.com/wagoodman/dive/dive/filetree"
 	dive "github.com/wagoodman/dive/dive/image/docker"
 )
@@ -72,8 +74,7 @@ func extractDelta(img string) string {
 		panic(err)
 	}
 
-	ff.Seek(0, 0)
-	ctx := NewContext()
+	ff.Seek(0, 0) // rewind the file
 
 	dstImage, err := tarball.ImageFromPath(img, nil)
 	if err != nil {
@@ -89,15 +90,29 @@ func extractDelta(img string) string {
 		}
 		return false, nil
 	}
-	_, tmpdir, err := Extract(
-		ctx,
-		dstImage,
-		extractor,
-	)
+
+	t, err := os.MkdirTemp("", "oci2sysext")
 	if err != nil {
 		panic(err)
 	}
-	return tmpdir
+	sanityCheck(t)
+
+	_, err = archive.Apply(context.Background(), t, mutate.Extract(dstImage), archive.WithFilter(extractor))
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+var allowedPaths []string = []string{
+	"usr",
+	"opt",
+}
+
+const attentionText = "[!] Attention!! \n\t"
+
+func attention(s ...any) {
+	fmt.Println(attentionText + fmt.Sprint(s...))
 }
 
 func analyzeRootFS(tmpdir string) {
@@ -106,11 +121,10 @@ func analyzeRootFS(tmpdir string) {
 	if err != nil {
 		panic(err)
 	}
+
 	for _, entry := range entries {
-		if entry.IsDir() {
-			if entry.Name() != "usr" && entry.Name() != "opt" {
-				fmt.Println(entry.Name(), "is not a valid directory")
-			}
+		if entry.IsDir() && !slices.Contains(allowedPaths, entry.Name()) {
+			attention(entry.Name(), "is not a valid directory")
 		}
 	}
 
@@ -119,12 +133,12 @@ func analyzeRootFS(tmpdir string) {
 	// warn the user that extension should be placed in /var/lib/confexts/
 	if _, err := os.Stat(tmpdir + "/etc"); err == nil {
 		etcFound = true
-		fmt.Println("Found /etc dir in tmpdir, this is ignored unless the extension is placed in /var/lib/confexts/ (but only /etc will be merged then)")
+		attention("Found /etc dir in tmpdir, this is ignored unless the extension is placed in /var/lib/confexts/ (but only /etc will be merged then)")
 	}
 
 	// if both /etc and /usr is present, warn the user
 	if _, err := os.Stat(tmpdir + "/usr"); err == nil && etcFound {
-		fmt.Println("Both /etc and /usr found, this is not supported by systemd. The extension can be either shipping configurations or binaries/other files, not both.")
+		attention("Both /etc and /usr found, this is not supported by systemd. The extension can be either shipping configurations or binaries/other files, not both.")
 	}
 
 	fmt.Println("Generating systemd-extension with the following files:")
@@ -158,15 +172,32 @@ func genSquashFS(tmpdir string, imgName string) {
 	}
 }
 
-// what docker2sysext does:
-// Load 2 container images from the user (src/dst) https://github.com/mudler/luet/blob/c47bf4833aef41e6ac3e8c831c1cfa8afc091592/pkg/helpers/docker/docker.go#L207
-// Calculate delta https://github.com/mudler/luet/blob/c47bf4833aef41e6ac3e8c831c1cfa8afc091592/pkg/api/core/image/delta_test.go#L72
+func sanityCheck(dir string) {
+	// Sanity checks
+	switch dir {
+	case "/":
+		panic("dir is /")
+	case "":
+		panic("dir is empty")
+	}
+}
+
+// Roughly what oci2sysext does is:
+// Load the container image tarball
+// Find out all the files that are added in the container image
+// Extract with containerd only the files needeed from the image.
 // Convert it to a squashfs for systemd-sysext
 func main() {
 	img := os.Args[1]
 	imgName := os.Args[2]
 
 	tmpdir := extractDelta(img)
+
+	// Sanity checks
+	sanityCheck(tmpdir)
+
+	defer os.RemoveAll(tmpdir)
+
 	analyzeRootFS(tmpdir)
 	createExtensionsMetadataFiles(tmpdir, imgName)
 	genSquashFS(tmpdir, imgName)
