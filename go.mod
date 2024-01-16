@@ -5,13 +5,13 @@ go 1.21.6
 require (
 	github.com/asottile/dockerfile v3.1.0+incompatible
 	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6
-	github.com/google/go-containerregistry v0.7.0
+	github.com/google/go-containerregistry v0.17.0
 	github.com/mudler/luet v0.0.0-20230821090946-c47bf4833aef
 	github.com/wagoodman/dive v0.10.0
 )
 
 require (
-	github.com/docker/go-units v0.4.0 // indirect
+	github.com/docker/go-units v0.5.0 // indirect
 	github.com/moby/sys/mount v0.3.0 // indirect
 	github.com/moby/sys/mountinfo v0.6.0 // indirect
 )
@@ -31,7 +31,7 @@ require (
 	github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38 // indirect
 	github.com/docker/cli v24.0.0+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v20.10.10+incompatible // indirect
+	github.com/docker/docker v24.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
