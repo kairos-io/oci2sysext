@@ -1,0 +1,27 @@
+---
+name: 'Build test'
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: oci2sysext-${{ github.ref || github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build
+        run: |
+                make
