@@ -1,9 +1,10 @@
 module github.com/kairos-io/oci2sysext
 
-go 1.21.1
+go 1.21.6
 
 require (
 	github.com/asottile/dockerfile v3.1.0+incompatible
+	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6
 	github.com/google/go-containerregistry v0.7.0
 	github.com/mudler/luet v0.0.0-20230821090946-c47bf4833aef
 	github.com/wagoodman/dive v0.10.0
@@ -24,7 +25,6 @@ require (
 	github.com/awesome-gocui/termbox-go v0.0.0-20190427202837-c0aef3d18bcc // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/containerd/cgroups v1.0.3 // indirect
-	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6 // indirect
 	github.com/containerd/continuity v0.2.3-0.20220330195504-d132b287edc8 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
