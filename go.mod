@@ -1,6 +1,6 @@
 module github.com/kairos-io/oci2sysext
 
-go 1.21.6
+go 1.22.2
 
 require (
 	github.com/asottile/dockerfile v3.1.0+incompatible
