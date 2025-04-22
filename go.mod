@@ -6,7 +6,7 @@ require (
 	github.com/asottile/dockerfile v3.1.0+incompatible
 	github.com/containerd/containerd v1.6.3-0.20220401172941-5ff8fce1fcc6
 	github.com/google/go-containerregistry v0.17.0
-	github.com/mudler/luet v0.0.0-20230821090946-c47bf4833aef
+	github.com/mudler/luet 383f62db8ba8
 	github.com/wagoodman/dive v0.10.0
 )
 
